@@ -1,6 +1,6 @@
 ---
 title: 最简便的方法基于Next主题搭建Hexo+Github博客
-date: 2019-10-23 21:45:53
+date: 2019-10-1 21:45:53
 tags: [博客, Hexo]
 ---
 

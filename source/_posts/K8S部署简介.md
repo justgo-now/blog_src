@@ -2,6 +2,8 @@
 title: K8S部署简介
 type: Linux
 date: 2019-10-31 20:01:22
+updated: 2019-11-1 16:06:01
+top: 3
 category: 
 - 持续集成
 tags:
@@ -1565,7 +1567,7 @@ EOF
 
 ### 1. 查看类命令
 
-1. 获取节点相应服务的信息
+获取节点相应服务的信息
 
 > kubectl get nodes
 
@@ -1573,15 +1575,15 @@ EOF
 
 > kubectl get pod --selector name=tomcat
 
-1. 查看K8S集群信息
+查看K8S集群信息
 
 > kubectl cluster-info
 
-1. 查看各组件信息
+查看各组件信息
 
 > kubectl -s [http://localhost:8080](http://localhost:8080/) get componentstatuses
 
-1. 查看pods所在的运行节点
+查看pods所在的运行节点
 
 > kubectl get pods -o wide
 
@@ -1598,19 +1600,19 @@ EOF
 > 或
 > kubectl get pods -o wide --all-namespaces #列出更多的详细信息
 
-1. 查看pods定义的详细信息
+查看pods定义的详细信息
 
 > kubectl get pods -o yaml
 
-1. 查看运行的pod的环境变量
+查看运行的pod的环境变量
 
 > kubectl exec <pod名称> env
 
-1. 查看指定pod的日志
+查看指定pod的日志
 
 > kubectl logs -f pods/<pod名称> -n kube-system
 
-1. 查看集群节点信息
+查看集群节点信息
 
 > kubectl get nodes
 
@@ -1618,15 +1620,15 @@ EOF
 
 > kubectl get nodes -l zone
 
-1. 查看某个命名空间(如kube-system)下的所有service
+查看某个命名空间(如kube-system)下的所有service
 
 > kubectl get services kubernetes-dashboard -n kube-system
 
-1. 查看某个命名空间(如kube-system)下的所有发布信息
+查看某个命名空间(如kube-system)下的所有发布信息
 
 > kubectl get deployment kubernetes-dashboard -n kube-system
 
-1. 查看资源信息
+查看资源信息
 
 - 根据service名查看资源信息
 
@@ -1639,15 +1641,15 @@ EOF
 
 ### 2. 操作类命令
 
-1. 创建资源
+创建资源
 
 > kubectl create -f <文件名.yaml>
 
-1. 重建资源
+重建资源
 
 > kubectl replace -f <文件名  [--force]
 
-1. 删除资源
+删除资源
 
 > - 强制删除某个文件名命名节点 `kubectl delete -f <文件名>`
 > - 删除某个Pod命令节点 `kubectl delete pod <pod名>`
@@ -1655,7 +1657,7 @@ EOF
 > - 删除某个服务命名节点 `kubectl delete service <service名>`
 > - 删除所有Pod节点 `kubectl delete pod --all`
 
-1. 动态伸缩操作
+动态伸缩操作
 
 - 为Replcation Controller名称为`nginx`动态扩展5个服务节点
 
@@ -1669,29 +1671,11 @@ EOF
 
 > kubectl scale --replicas=2 -f redis-slave-deployment.yaml
 
-1. 进入Pod节点容器内进行操作
+进入Pod节点容器内进行操作
 
 > kubectl exec -it redis-master-1033017107-q47hh /bin/bash
 
-1. Pod节点容器标签操作
-
-- 增加Node节点label值
-
-> kubectl label nodes node1 zone=north
-
-- 增加Pod的label值 [key]=[value]
-
-> kubectl label pod redis-master-1033017107-q47hh role=master
-
-- 删除Pod的label值
-
-> kubectl label pod redis-master-1033017107-q47hh role-
-
-- 修改Pod的label值
-
-> kubectl label pod redis-master-1033017107-q47hh role=backend --overwrite
-
-1. 滚动升级
+滚动升级
 
 - 配置文件滚动升级
 
@@ -1705,7 +1689,9 @@ EOF
 
 > kubectl rolling-update redis-master --image=redis-master:1.0 --rollback
 
+### 3. 更多操作命令
 
+[Kubernetes](http://docs.kubernetes.org.cn/)
 
 ## Kubernetes Service
 
