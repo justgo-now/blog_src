@@ -2,7 +2,7 @@
 title: docker使用说明
 date: 2019-10-30 21:12:14
 updated: 2019-10-31 10:01:54 #手动添加更新时间
-categories: 持续集成
+category: 持续集成
 tags: 
 - docker
 ---

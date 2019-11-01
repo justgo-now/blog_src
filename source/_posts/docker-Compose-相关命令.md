@@ -1,6 +1,7 @@
 ---
 title: docker-Compose 相关命令
 date: 2019-04-20 21:52:59
+category: 持续集成
 tags: [docker]
 ---
 
