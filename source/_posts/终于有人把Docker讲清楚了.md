@@ -2,8 +2,9 @@
 title: 终于有人把Docker讲清楚了
 date: 2019-10-31 17:18:26
 top:
-categories:
+categories: 持续集成
 tags:
+- docker
 ---
 
 ## 终于有人把 Docker 讲清楚了
@@ -759,22 +760,58 @@ vim /usr/lib/systemd/system/docker.service
 
 ```
 [root@web1 ~]# vim /usr/lib/systemd/system/docker.service
-[Unit]Description=Docker Application Container EngineDocumentation=http://docs.docker.comAfter=network.targetWants=docker-storage-setup.serviceRequires=docker-cleanup.timer
-[Service]Type=notifyNotifyAccess=mainEnvironmentFile=-/run/containers/registries.confEnvironmentFile=-/etc/sysconfig/dockerEnvironmentFile=-/etc/sysconfig/docker-storageEnvironmentFile=-/etc/sysconfig/docker-networkEnvironment=GOTRACEBACK=crashEnvironment=DOCKER_HTTP_HOST_COMPAT=1Environment=PATH=/usr/libexec/docker:/usr/bin:/usr/sbinExecStart=/usr/bin/dockerd-current --registry-mirror=https://rfcod7oz.mirror.aliyuncs.com  #这个值可以登陆阿里云账号请参考下图          --add-runtime docker-runc=/usr/libexec/docker/docker-runc-current           --default-runtime=docker-runc           --exec-opt native.cgroupdriver=systemd           --userland-proxy-path=/usr/libexec/docker/docker-proxy-current           --init-path=/usr/libexec/docker/docker-init-current           --seccomp-profile=/etc/docker/seccomp.json           $OPTIONS           $DOCKER_STORAGE_OPTIONS           $DOCKER_NETWORK_OPTIONS           $ADD_REGISTRY           $BLOCK_REGISTRY           $INSECURE_REGISTRY           $REGISTRIESExecReload=/bin/kill -s HUP $MAINPIDLimitNOFILE=1048576LimitNPROC=1048576LimitCORE=infinityTimeoutStartSec=0Restart=on-abnormalKillMode=process
-[Install]WantedBy=multi-user.target
+
+[Unit]
+Description=Docker Application Container Engine
+Documentation=http://docs.docker.com
+After=network.target
+Wants=docker-storage-setup.service
+Requires=docker-cleanup.timer
+
+[Service]
+Type=notify
+NotifyAccess=main
+EnvironmentFile=-/run/containers/registries.conf
+EnvironmentFile=-/etc/sysconfig/docker
+EnvironmentFile=-/etc/sysconfig/docker-storage
+EnvironmentFile=-/etc/sysconfig/docker-network
+Environment=GOTRACEBACK=crash
+Environment=DOCKER_HTTP_HOST_COMPAT=1
+Environment=PATH=/usr/libexec/docker:/usr/bin:/usr/sbin
+ExecStart=/usr/bin/dockerd-current --registry-mirror=https://rfcod7oz.mirror.aliyuncs.com  #这个值可以登陆阿里云账号请参考下图
+          --add-runtime docker-runc=/usr/libexec/docker/docker-runc-current 
+          --default-runtime=docker-runc 
+          --exec-opt native.cgroupdriver=systemd 
+          --userland-proxy-path=/usr/libexec/docker/docker-proxy-current 
+          --init-path=/usr/libexec/docker/docker-init-current 
+          --seccomp-profile=/etc/docker/seccomp.json 
+          $OPTIONS 
+          $DOCKER_STORAGE_OPTIONS 
+          $DOCKER_NETWORK_OPTIONS 
+          $ADD_REGISTRY 
+          $BLOCK_REGISTRY 
+          $INSECURE_REGISTRY 
+          $REGISTRIES
+ExecReload=/bin/kill -s HUP $MAINPID
+LimitNOFILE=1048576
+LimitNPROC=1048576
+LimitCORE=infinity
+TimeoutStartSec=0
+Restart=on-abnormal
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
 ```
 
-　　![img](data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==)
-
-　
+　　![img](终于有人把Docker讲清楚了/640-1572601422584.webp)　
 
 ### **2、docker版本查询**
 
 
 
 ```
-[root@web1 ~]# docker versionClient: Version:         1.13.1 API version:     1.26 Package version: docker-1.13.1-96.gitb2f74b2.el7.centos.x86_64 Go version:      go1.10.3 Git commit:      b2f74b2/1.13.1 Built:           Wed May  1 14:55:20 2019 OS/Arch:         linux/amd64
-Server: Version:         1.13.1 API version:     1.26 (minimum version 1.12) Package version: docker-1.13.1-96.gitb2f74b2.el7.centos.x86_64 Go version:      go1.10.3 Git commit:      b2f74b2/1.13.1 Built:           Wed May  1 14:55:20 2019 OS/Arch:         linux/amd64 Experimental:    false
+[root@web1 ~]# docker version
 ```
 
 
