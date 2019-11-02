@@ -190,6 +190,7 @@ social:
   GitHub: https://github.com/geoffen || github 
   Weibo: https://weibo.com/234821810 || weibo
   E-Mail: mailto:foreverlovemichael@gmail.com || envelope
+  Twitter: https://twitter.com/losincasablanca || twitter      
 
 social_icons:
   enable: true 
@@ -1124,4 +1125,4 @@ utterances:
   theme: github-light    # github-light or github-dark
 
 # Fireworks
-fireworks: true
+fireworks: false 
