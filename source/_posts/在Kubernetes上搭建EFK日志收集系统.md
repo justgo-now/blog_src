@@ -15,7 +15,7 @@ Elasticsearch 通常与 `Kibana` 一起部署，Kibana 是 Elasticsearch 的一�
 
 我们先来配置启动一个可扩展的 Elasticsearch 集群，然后在 Kubernetes 集群中创建一个 Kibana 应用，最后通过 DaemonSet 来运行 Fluentd，以便它在每个 Kubernetes 工作节点上都可以运行一个 Pod。
 
-
+![img](在Kubernetes上搭建EFK日志收集系统/20180511161547422)
 
 ## 部署nfs-client
 
@@ -1254,3 +1254,31 @@ Pod 创建并运行后，回到 Kibana Dashboard 页面，在上面的`Discover`
 > 参考文档: [How To Set Up an Elasticsearch, Fluentd and Kibana (EFK) Logging Stack on Kubernetes](https://www.digitalocean.com/community/tutorials/how-to-set-up-an-elasticsearch-fluentd-and-kibana-efk-logging-stack-on-kubernetes)
 >
 > 参考链接：<https://www.jianshu.com/p/1000ae80a493>
+
+
+
+## 部署logtrail
+
+下载kibana对应版本的logtrail <https://github.com/sivasamyk/logtrail>
+
+由于kibana镜像不带logtrail，安装插件后需要重启kibana，在容器下无法重启。因此需要基于kibana镜像重新生成一个带插件的新镜像。
+
+以6.7.0版本为例，Dockerfile如下：
+
+```
+# elk https://hub.docker.com/r/sebp/elk
+#FROM sebp/elk:670
+FROM docker.elastic.co/kibana/kibana-oss:6.7.0
+#ADD 02-beats-input.conf /etc/logstash/conf.d/02-beats-input.conf
+#ADD 30-output.conf /etc/logstash/conf.d/30-output.conf
+# kibanasivasamyk/logtrail 
+ADD ./logtrail-6.7.0-0.1.31.zip /opt/kibana/plugin/logtrail-6.7.0-0.1.31.zip
+#  kibana
+# WORKDIR ${KIBANA_HOME}
+# kibana
+RUN bin/kibana-plugin install file:///opt/kibana/plugin/logtrail-6.7.0-0.1.31.zip
+```
+
+执行build命令
+
+>docker build  --network=host -t docker.elastic.co/kibana/kibana-oss:kibana-logtrail .
