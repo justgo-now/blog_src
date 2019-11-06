@@ -1,7 +1,7 @@
 ---
 title: 解决Hexo首页阅读次数样式诡异的问题
 date: 2018-11-16 10:19:43
-tags: [Hexo]
+tags: [hexo]
 categories: 博客
 ---
 ## 前言
