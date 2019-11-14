@@ -2,7 +2,7 @@
 title: docker使用说明
 date: 2019-10-30 21:12:14
 updated: 2019-11-1 17:01:54 #手动添加更新时间
-top: 
+top: 1
 category: 持续集成
 tags: 
 - docker
@@ -291,15 +291,151 @@ hello world
 
 3 **docker push [ImageID] [repertory_address]**提交镜像到云仓库
 
-作者：爱睡觉的树
 
-链接：
 
-https://www.jianshu.com/p/a84e8cf33b34
+## docker容器及镜像清理
 
-来源：简书
+To clean up, all unused containers, images, network, and volumes, use the following command.
 
-著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+```
+docker system prune
+```
+
+**Recommended:** [Learn Docker Technologies for DevOps and Developers 53](http://skillslane.com/offer/learn-docker-technologies-devops-developers/)
+
+To individually delete all the components, use the following commands.
+
+```
+docker container prune
+docker image prune
+docker network prune
+docker volume prune
+```
+
+For Docker versions below 1.13
+
+To clean up containers, first, you need to clean up your containers. So that all the unwanted images can be deleted without dependency problems.
+
+Delete all Exited Containers
+
+> docker rm $(docker ps -q -f status=exited) 
+
+Delete all Stopped Containers
+
+> docker rm $(docker ps -a -q)
+####Delete All Running and Stopped Containers
+> docker stop $(docker ps -a -q)
+> docker rm $(docker ps -a -q)
+
+#### Delete all “none” Images
+
+```
+docker rmi $(docker images | grep "^<none>" | awk '{ print $3 }')
+```
+
+#### Delete all Dangling Images
+
+```
+sudo docker rmi $(sudo docker images -f "dangling=true" -q)
+```
+
+
+
+Update Sept. 2016: Docker 1.13: [PR 26108](https://github.com/docker/docker/pull/26108) and [commit 86de7c0](https://github.com/docker/docker/commit/86de7c000f5d854051369754ad1769194e8dd5e1) introduce a few new commands to help facilitate visualizing how much space the docker daemon data is taking on disk and allowing for easily cleaning up "unneeded" excess.
+
+[**docker system prune**](https://docs.docker.com/engine/reference/commandline/system_prune/) will delete ALL dangling data (i.e. In order: containers stopped, volumes without containers and images with no containers). Even unused data, with `-a` option.
+
+You also have:
+
+- [`docker container prune`](https://docs.docker.com/engine/reference/commandline/container_prune/)
+- [`docker image prune`](https://docs.docker.com/engine/reference/commandline/image_prune/)
+- [`docker network prune`](https://docs.docker.com/engine/reference/commandline/network_prune/)
+- [`docker volume prune`](https://docs.docker.com/engine/reference/commandline/volume_prune/)
+
+For *unused* images, use `docker image prune -a` (for removing dangling *and* ununsed images).
+Warning: '*unused*' means "images not referenced by any container": be careful before using `-a`.
+
+As illustrated in [A L](https://stackoverflow.com/users/1207596/a-l)'s [answer](https://stackoverflow.com/a/50405599/6309), `docker system prune --all` will remove all *unused* images not just dangling ones... which can be a bit too much.
+
+Combining `docker xxx prune` with the [`--filter` option](https://docs.docker.com/engine/reference/commandline/system_prune/#filtering) can be a great way to limit the pruning ([docker SDK API 1.28 minimum, so docker 17.04+](https://docs.docker.com/develop/sdk/#api-version-matrix))
+
+> The currently supported filters are:
+
+- `until (<timestamp>)` - only remove containers, images, and networks created before given timestamp
+- `label` (`label=<key>`, `label=<key>=<value>`, `label!=<key>`, or `label!=<key>=<value>`) - only remove containers, images, networks, and volumes with (or *without*, in case `label!=...` is used) the specified labels.
+
+See "[Prune images](https://docs.docker.com/config/pruning/#prune-images)" for an example.
+
+------
+
+Original answer (Sep. 2016)
+
+I usually do:
+
+```
+docker rmi $(docker images --filter "dangling=true" -q --no-trunc)
+```
+
+I have an [alias for removing those [dangling images\]](https://github.com/docker/docker/blob/634a848b8e3bdd8aed834559f3b2e0dfc7f5ae3a/man/docker-images.1.md#options)[13](https://github.com/docker/docker/blob/634a848b8e3bdd8aed834559f3b2e0dfc7f5ae3a/man/docker-images.1.md#options): `drmi`
+
+> The `dangling=true` filter finds unused images
+
+That way, any intermediate image no longer referenced by a labelled image is removed.
+
+I do the same **first** for [exited processes (containers)](https://github.com/VonC/b2d/blob/b010ab51974ac7de6162cdcbff795d7b9e84fd67/.bash_aliases#L21)
+
+```
+alias drmae='docker rm $(docker ps -qa --no-trunc --filter "status=exited")'
+```
+
+As [haridsv](https://stackoverflow.com/users/95750/haridsv) points out [in the comments](https://stackoverflow.com/questions/32723111/how-to-remove-old-and-unused-docker-images/32723127#comment63457575_32723127):
+
+> Technically, **you should first clean up containers before cleaning up images, as this will catch more dangling images and less errors**.
+
+------
+
+[Jess Frazelle (jfrazelle)](https://github.com/jfrazelle) has the [bashrc function](https://github.com/jfrazelle/dotfiles/blob/a7fd3df6ab423e6dd04f27727f653753453db837/.dockerfunc#L8-L11):
+
+```
+dcleanup(){
+    docker rm -v $(docker ps --filter status=exited -q 2>/dev/null) 2>/dev/null
+    docker rmi $(docker images --filter dangling=true -q 2>/dev/null) 2>/dev/null
+}
+```
+
+------
+
+To remove old images, and not just "unreferenced-dangling" images, you can consider [**docker-gc**](https://github.com/spotify/docker-gc):
+
+
+
+```
+$ docker images --no-trunc --format '{{.ID}} {{.CreatedSince}} {{.Repository}}' \
+    | grep ' months' | awk '{ print $1 }' \
+    | xargs --no-run-if-empty docker rmi
+```
+
+Example of `/etc/cron.daily/docker-gc` script:
+
+```
+#!/bin/sh -e
+
+# Delete all stopped containers (including data-only containers).
+docker ps -a -q --no-trunc --filter "status=exited" | xargs --no-run-if-empty docker rm -v
+
+# Delete all tagged images more than a month old
+# (will fail to remove images still used).
+docker images --no-trunc --format '{{.ID}} {{.CreatedSince}}' | grep ' months' | awk '{ print $1 }' | xargs --no-run-if-empty docker rmi || true
+
+# Delete all 'untagged/dangling' (<none>) images
+# Those are used for Docker caching mechanism.
+docker images -q --no-trunc --filter dangling=true | xargs --no-run-if-empty docker rmi
+
+# Delete all dangling volumes.
+docker volume ls -qf dangling=true | xargs --no-run-if-empty docker volume rm
+```
+
+
 
 ## docker-compose 的安装及使用
 

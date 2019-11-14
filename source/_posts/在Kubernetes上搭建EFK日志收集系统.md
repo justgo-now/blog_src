@@ -1282,3 +1282,100 @@ RUN bin/kibana-plugin install file:///opt/kibana/plugin/logtrail-6.7.0-0.1.31.zi
 执行build命令
 
 >docker build  --network=host -t docker.elastic.co/kibana/kibana-oss:kibana-logtrail .
+
+或者
+
+```dockerfile
+FROM docker.elastic.co/kibana/kibana-oss:6.2.4
+RUN kibana-plugin install https://github.com/sivasamyk/logtrail/releases/download/v0.1.27/logtrail-6.2.4-0.1.27.zip
+WORKDIR /config
+USER root
+RUN mv /usr/share/kibana/plugins/logtrail/logtrail.json /config/logtrail.json && \
+    ln -s /config/logtrail.json /usr/share/kibana/plugins/logtrail/logtrail.json
+USER kibana
+```
+
+使用configmap
+
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logtrail-config
+data:
+  logtrail.json: |
+    {
+        "version" : 1,
+        "index_patterns" : [
+        {      
+            "es": {
+                "default_index": "logstash-*"
+            },
+            "tail_interval_in_seconds": 10,
+            "es_index_time_offset_in_seconds": 0,
+            "display_timezone": "local",
+            "display_timestamp_format": "MMM DD HH:mm:ss",
+            "max_buckets": 500,
+            "default_time_range_in_days" : 0,
+            "max_hosts": 100,
+            "max_events_to_keep_in_viewer": 5000,
+            "fields" : {
+                "mapping" : {
+                    "timestamp" : "@timestamp",
+                    "hostname" : "kubernetes.host",
+                    "program": "kubernetes.pod_name",
+                    "message": "log"
+                },
+                "message_format": "{{{log}}}"
+            },
+            "color_mapping" : {
+            }
+        }]
+    } 
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: kibana
+  labels:
+    component: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+     component: kibana
+  template:
+    metadata:
+      labels:
+        component: kibana
+    spec:
+      containers:
+      - name: kibana
+        image: sh4d1/kibana-logtrail:6.2.4 # or your image
+        volumeMounts:
+          - name: logtrail-config
+            mountPath: /config
+        env:
+        - name: CLUSTER_NAME
+          value: myesdb # the name of your ES cluster
+        resources:
+          limits:
+            cpu: 1000m
+          requests:
+            cpu: 100m
+        ports:
+        - containerPort: 5601
+          name: http
+      volumes:
+        - name: logtrail-config
+          configMap:
+            name: logtrail-config
+```
+
+Then the important part is the `fields` section. It will display like:
+
+```
+timestamp hostname program:message
+```
+
+The `message` is defined in `message_format`. We could put something like `{{{docker.container_id}}}: {{{log}}}`.
