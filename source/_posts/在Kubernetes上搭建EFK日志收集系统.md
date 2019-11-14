@@ -1378,4 +1378,3 @@ Then the important part is the `fields` section. It will display like:
 timestamp hostname program:message
 ```
 
-The `message` is defined in `message_format`. We could put something like `{{{docker.container_id}}}: {{{log}}}`.
